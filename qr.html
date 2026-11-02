@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>QR code du menu | Le Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',system-ui,sans-serif;background:#0b0809;color:#efe8dc;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 20px 60px;gap:26px}
+.tools{width:100%;max-width:520px;display:flex;flex-direction:column;gap:12px}
+.tools label{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#a99f92}
+.tools input{width:100%;padding:14px;background:#161011;border:1px solid rgba(239,232,220,.2);color:#efe8dc;font:inherit;font-size:15px}
+.tools .row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{flex:1;min-width:150px;padding:14px 18px;border:1px solid #8a1730;background:#8a1730;color:#efe8dc;font:400 13px 'Jost',sans-serif;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
+.btn.g{background:none;border-color:rgba(239,232,220,.25)}
+.hint{font-size:13px;color:#a99f92}
+.card{width:100%;max-width:420px;background:#fff;color:#111;text-align:center;padding:36px 30px 30px;border:1px solid #ddd}
+.logo{font-family:'Cormorant Garamond',Georgia,serif;display:inline-flex;align-items:center;line-height:1;font-size:26px}
+.logo span{font-weight:500;letter-spacing:.04em;font-size:1.1em}
+.logo b{font-weight:500;font-size:2.8em;margin:0 -.1em 0 .02em;line-height:.8}
+.sub{font-size:10.5px;letter-spacing:.45em;text-transform:uppercase;color:#8a1730;margin:8px 0 22px}
+.card h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:30px;line-height:1.15;margin-bottom:18px}
+#qr{width:100%;max-width:300px;margin:0 auto 14px;display:block;aspect-ratio:1/1}
+#qr canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+.url{font-size:12px;color:#555;word-break:break-all;margin-bottom:12px}
+.foot{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#777}
+@media print{
+  body{background:#fff;padding:0;min-height:0}
+  .tools{display:none}
+  .card{border:0;max-width:none;width:100%;padding:20mm 0}
+  #qr{max-width:110mm}
+}
+</style>
+</head>
+<body>
+<div class="tools">
+  <label for="u">Adresse de la page menu</label>
+  <input id="u" type="url" inputmode="url" spellcheck="false" placeholder="https://votre-site.com/menu.html">
+  <p class="hint" id="hint"></p>
+  <div class="row">
+    <button class="btn" id="print">Imprimer</button>
+    <button class="btn g" id="dl">Télécharger le QR (PNG)</button>
+  </div>
+</div>
+
+<div class="card" id="card">
+  <div class="logo"><span>LE</span><b>C</b><span>ENTER</span></div>
+  <p class="sub">Lounge Bar</p>
+  <h1>Scannez pour découvrir notre carte</h1>
+  <div id="qr"></div>
+  <p class="url" id="shown"></p>
+  <p class="foot">Restaurant &amp; Cigar Lounge · Brazzaville</p>
+</div>
+
+<script src="qrcode.js"></script>
+<script>
+(function(){
+  var input=document.getElementById('u'),box=document.getElementById('qr'),shown=document.getElementById('shown'),hint=document.getElementById('hint');
+  var canvas=null;
+  function guess(){
+    if(/^https?:/.test(location.protocol)){ return location.href.replace(/qr\.html.*$/,'menu.html'); }
+    return '';
+  }
+  function draw(){
+    var url=input.value.trim(); box.innerHTML=''; canvas=null; shown.textContent='';
+    if(!/^https?:\/\/\S+$/i.test(url)){ hint.textContent='Collez ici l\u2019adresse en ligne de menu.html pour générer le QR.'; return; }
+    hint.textContent='Vérifiez que cette adresse ouvre bien le menu avant d\u2019imprimer.';
+    var qr=qrcode(0,'M'); qr.addData(url); qr.make();
+    var n=qr.getModuleCount(),q=4,cell=Math.ceil(1200/(n+q*2)),size=cell*(n+q*2);
+    canvas=document.createElement('canvas'); canvas.width=canvas.height=size;
+    var c=canvas.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,size,size); c.fillStyle='#000';
+    for(var r=0;r<n;r++)for(var k=0;k<n;k++) if(qr.isDark(r,k)) c.fillRect((k+q)*cell,(r+q)*cell,cell,cell);
+    box.appendChild(canvas); shown.textContent=url.replace(/^https?:\/\//,'');
+  }
+  input.value=guess(); input.addEventListener('input',draw); draw();
+  document.getElementById('print').onclick=function(){ if(canvas) window.print(); else hint.textContent='Renseignez d\u2019abord l\u2019adresse du menu.'; };
+  document.getElementById('dl').onclick=function(){
+    if(!canvas){ hint.textContent='Renseignez d\u2019abord l\u2019adresse du menu.'; return; }
+    var a=document.createElement('a'); a.download='qr-menu-le-center.png'; a.href=canvas.toDataURL('image/png'); a.click();
+  };
+})();
+</script>
+</body>
+</html>
